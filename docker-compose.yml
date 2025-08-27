@@ -8,3 +8,13 @@ services:
         - "linux/amd64"
         - "linux/arm64"
     image: "mmhk/motors-backup"
+
+
+  app:
+    image: "mmhk/motors-backup"
+    environment:
+      DB_HOST: "${DB_HOST}"
+      DB_USER: "${DB_USER}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      DB_NAME: "${DB_NAME}"
+    command: ["motors-backup", "your_table"]

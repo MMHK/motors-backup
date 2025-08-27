@@ -36,6 +36,20 @@ func TestAnalyzeColumns(t *testing.T) {
 	t.Logf("Columns: %+v", columns)
 }
 
+func TestGetTableDDL(t *testing.T) {
+	dbConn, dbName, tableName, err := GetTestConfig()
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	ddl, err := GetTableDDL(dbConn, dbName, tableName)
+	if err != nil {
+		t.Errorf("Failed to get table DDL: %v", err)
+	}
+
+	t.Logf("Table DDL: %s", ddl)
+}
+
 func TestGetNonGeneratedColumns(t *testing.T) {
 	dbConn, dbName, tableName, err := GetTestConfig()
 	if err != nil {

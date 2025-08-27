@@ -1,9 +1,11 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"motors-backup/internal"
 	"motors-backup/internal/config"
+	"motors-backup/internal/log"
 	"os"
 	"strings"
 )
@@ -11,7 +13,7 @@ import (
 func main() {
 	// 检查参数
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: dump [options] table")
+		fmt.Println("Usage: motors-backup [options] table")
 		fmt.Println()
 		fmt.Println("Options:")
 		fmt.Println("  -h, --help     Show help information")
@@ -23,7 +25,7 @@ func main() {
 
 	// 处理帮助参数
 	if os.Args[1] == "-h" || os.Args[1] == "--help" {
-		fmt.Println("Usage: dump [options] table")
+		fmt.Println("Usage: motors-backup [options] table")
 		fmt.Println()
 		fmt.Println("Options:")
 		fmt.Println("  -h, --help     Show help information")
@@ -37,15 +39,43 @@ func main() {
 	tableNames := strings.Split(os.Args[1], ",")
 	cfg := config.LoadConfig()
 
-	// 执行导出操作
-	for _, tableName := range tableNames {
-		tableName = strings.TrimSpace(tableName)
-		if tableName != "" {
-			err := internal.DumpTable(cfg, tableName)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error dumping table %s: %v\n", tableName, err)
-				os.Exit(1)
+	err := internal.StartExport(cfg, func(database *sql.DB, info *internal.MySQLInfo) error {
+		internal.PrintEnvironmentSettings(cfg, info)
+
+		err := internal.DumpCreateDatabase(cfg, database)
+		if err != nil {
+			log.Logger.Errorf("Error creating database: %v\n", err)
+			os.Exit(1)
+			return err
+		}
+
+		// 执行导出操作
+		for _, tableName := range tableNames {
+			tableName = strings.TrimSpace(tableName)
+			if tableName != "" {
+				err := internal.DumpTableStructure(cfg, database, tableName)
+				if err != nil {
+					log.Logger.Errorf("Error dumping table structure %s: %v\n", tableName, err)
+					os.Exit(1)
+					return err
+				}
+
+				err = internal.DumpTable(cfg, database, tableName)
+				if err != nil {
+					log.Logger.Errorf("Error dumping table %s: %v\n", tableName, err)
+					os.Exit(1)
+					return err
+				}
 			}
 		}
+
+		internal.PrintRestoreConnectionSettings()
+
+		return nil
+	})
+
+	if err != nil {
+		log.Logger.Errorf("Error: %v\n", err)
+		os.Exit(1)
 	}
 }

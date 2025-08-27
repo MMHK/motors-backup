@@ -11,7 +11,7 @@ import (
 // Connect establishes a connection to the MySQL database
 func Connect(cfg *config.Config) (*sql.DB, error) {
 	// 构建数据库连接字符串
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=false",
 		cfg.DBUser,
 		cfg.DBPassword,
 		cfg.DBHost,
