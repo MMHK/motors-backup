@@ -1,0 +1,11 @@
+vendor
+tests
+.git
+.idea
+.svn
+.env
+.env.example
+*.md
+LICENSE
+*.exe
+*.db
