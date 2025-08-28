@@ -1,7 +1,7 @@
 # .goreleaser.yml
 
 # 這是 GoReleaser 配置文件的版本
-version: 2
+version: 1
 
 # 在所有構建步驟之前運行的命令
 before:
@@ -32,13 +32,9 @@ builds:
 
 # 打包配置
 archives:
-  -
+  - id: motors-backup
     # 生成的壓縮包文件名模板
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
-    # 替換常見的 OS 名稱
-    replacements:
-      linux: Linux
-      windows: Windows
     # 壓縮包格式
     format: tar.gz
     # 為 Windows 平臺單獨創建 zip 壓縮包

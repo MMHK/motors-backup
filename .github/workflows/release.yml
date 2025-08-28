@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           # 指定你項目使用的 Go 版本
-          go-version: '1.21'
+          go-version: '1.23'
 
       # 第三步：運行 GoReleaser
       - name: Run GoReleaser
