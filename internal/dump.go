@@ -91,7 +91,7 @@ func DumpViews(cfg *config.Config, database *sql.DB) error {
 		fmt.Printf("/*!50001 DROP VIEW IF EXISTS `%s`*/;\n", viewDDL.Name)
 		fmt.Println("SET @saved_cs_client     = @@character_set_client;")
 		fmt.Println("SET character_set_client = utf8mb4;")
-		fmt.Println(viewDDL.DDL)
+		fmt.Printf("%s;\n", viewDDL.DDL)
 		fmt.Printf("SET character_set_client = @saved_cs_client;\n")
 	}
 
