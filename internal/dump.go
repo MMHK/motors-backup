@@ -7,6 +7,7 @@ import (
 	dbConn "motors-backup/internal/db"
 	"motors-backup/internal/exporter"
 	"motors-backup/internal/schema"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -80,6 +81,18 @@ func DumpTable(cfg *config.Config, database *sql.DB, tableName string, whereClau
 	return nil
 }
 
+func ReplaceDDLDefinerWithCurrentUser(ddl string) string {
+	// 替换 DEFINER=...
+	re := regexp.MustCompile(`DEFINER=[^ ]+`)
+	return re.ReplaceAllString(ddl, "DEFINER=CURRENT_USER()")
+}
+
+func ReplaceViewDDLASReplace(ddl string) string {
+	// 替换 AS REPLACE
+	re := regexp.MustCompile(`CREATE ALGORITHM`)
+	return re.ReplaceAllString(ddl, "CREATE OR REPLACE ALGORITHM")
+}
+
 func DumpViews(cfg *config.Config, database *sql.DB) error {
 	viewDDLs, err := schema.AllViewDDL(database)
 	if err != nil {
@@ -87,11 +100,10 @@ func DumpViews(cfg *config.Config, database *sql.DB) error {
 	}
 	for _, viewDDL := range viewDDLs {
 		fmt.Printf("\n--\n-- Temporary table structure for view `%s`\n--\n\n", viewDDL.Name)
-		fmt.Printf("DROP TABLE IF EXISTS `%s`;\n", viewDDL.Name)
 		fmt.Printf("/*!50001 DROP VIEW IF EXISTS `%s`*/;\n", viewDDL.Name)
 		fmt.Println("SET @saved_cs_client     = @@character_set_client;")
 		fmt.Println("SET character_set_client = utf8mb4;")
-		fmt.Printf("%s;\n", viewDDL.DDL)
+		fmt.Printf("%s;\n", ReplaceDDLDefinerWithCurrentUser(ReplaceViewDDLASReplace(viewDDL.DDL)))
 		fmt.Printf("SET character_set_client = @saved_cs_client;\n")
 	}
 
