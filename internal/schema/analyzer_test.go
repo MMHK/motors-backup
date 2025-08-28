@@ -23,6 +23,18 @@ func GetTestConfig() (*sql.DB, string, string, error) {
 	return db, conf.DBName, testTableName, nil
 }
 
+func TestListAllTables(t *testing.T) {
+	dbConn, _, _, err := GetTestConfig()
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	tables, err := ListAllTables(dbConn)
+	if err != nil {
+		t.Errorf("Failed to list tables: %v", err)
+	}
+	t.Logf("Tables: %+v", tables)
+}
+
 func TestAnalyzeColumns(t *testing.T) {
 	dbConn, dbName, tableName, err := GetTestConfig()
 	if err != nil {

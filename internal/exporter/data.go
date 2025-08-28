@@ -2,7 +2,6 @@ package exporter
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -72,6 +71,45 @@ func buildInsertStatement(tableName string, columns []string, values []interface
 	return fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s);", tableName, columnList, strings.Join(valueList, ", "))
 }
 
+// EscapeSQLString 接收一个字符串，并返回一个符合SQL字面量规范的安全字符串。
+// 它会用单引号包裹结果，并对内部的特殊字符进行转义。
+func EscapeSQLString(value string) string {
+	var sb strings.Builder
+	// SQL字符串以单引号开始
+	sb.WriteByte('\'')
+
+	for _, r := range value {
+		switch r {
+		case '\'':
+			// 将单引号转义为两个单引号
+			sb.WriteString("''")
+		case '\\':
+			// 将反斜杠转义为两个反斜杠
+			sb.WriteString("\\\\")
+		case '\n':
+			// 将换行符转义为 \n
+			sb.WriteString("\\n")
+		case '\r':
+			// 将回车符转义为 \r
+			sb.WriteString("\\r")
+		case '\t':
+			// 将制表符转义为 \t
+			sb.WriteString("\\t")
+		case '\x00':
+			// 将空字节转义为 \0
+			sb.WriteString("\\0")
+		case '\x1a':
+			sb.WriteString("\\Z") // Ctrl+Z
+		default:
+			sb.WriteRune(r)
+		}
+	}
+
+	// SQL字符串以单引号结束
+	sb.WriteByte('\'')
+	return sb.String()
+}
+
 // formatValue formats a value for use in an SQL statement
 func formatValue(value interface{}, columnType *sql.ColumnType) string {
 	if value == nil {
@@ -87,12 +125,5 @@ func formatValue(value interface{}, columnType *sql.ColumnType) string {
 
 	// 字符串类型需要引号
 	strValue := fmt.Sprintf("%s", value)
-	// 使用JSON编码确保字
-	b, err := json.Marshal(strValue)
-	if err != nil {
-		// 如果JSON编码失败，回退到原来的处理方式
-		escapedValue := strings.ReplaceAll(strValue, "'", "''")
-		return "'" + escapedValue + "'"
-	}
-	return fmt.Sprintf("'%s'", strings.Trim(string(b), "\""))
+	return EscapeSQLString(strValue)
 }

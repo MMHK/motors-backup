@@ -89,3 +89,28 @@ func GetDatabaseDDL(db *sql.DB, dbName string) (string, error) {
 	}
 	return ddl, nil
 }
+
+func ListAllTables(db *sql.DB) ([]string, error) {
+	query := "SHOW TABLES;"
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query information_schema: %w", err)
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var tableName string
+		err := rows.Scan(&tableName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan table name: %w", err)
+		}
+		tables = append(tables, tableName)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return tables, nil
+}

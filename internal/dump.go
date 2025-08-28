@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func DumpCreateDatabase(cfg *config.Config, database *sql.DB) error {
+func DumpCreateDatabase(cfg *config.Config, database *sql.DB, withCreateDB bool) error {
 	databaseDDL, err := schema.GetDatabaseDDL(database, cfg.DBName)
 	if err != nil {
 		return fmt.Errorf("failed to get database DDL: %w", err)
@@ -18,10 +18,10 @@ func DumpCreateDatabase(cfg *config.Config, database *sql.DB) error {
 	fmt.Println("--")
 	fmt.Printf("-- Current Database: `%s`\n", cfg.DBName)
 	fmt.Println("--")
-	fmt.Println("")
-	fmt.Printf("%s;\n", strings.Replace(databaseDDL, "CREATE DATABASE", "CREATE DATABASE /*!32312 IF NOT EXISTS*/", 1))
-	fmt.Println("")
-	fmt.Printf("USE `%s`;\n\n", cfg.DBName)
+	if withCreateDB {
+		fmt.Printf("\n%s;\n", strings.Replace(databaseDDL, "CREATE DATABASE", "CREATE DATABASE /*!32312 IF NOT EXISTS*/", 1))
+	}
+	fmt.Printf("\nUSE `%s`;\n\n", cfg.DBName)
 
 	return nil
 }
