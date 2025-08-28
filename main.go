@@ -97,13 +97,6 @@ func main() {
 			return err
 		}
 
-		err = internal.DumpViews(cfg, database)
-		if err != nil {
-			log.Logger.Errorf("Error dumping views: %v\n", err)
-			os.Exit(1)
-			return err
-		}
-
 		allTables, err := schema.ListAllTables(database)
 		if err != nil {
 			log.Logger.Errorf("Error listing all tables: %v\n", err)
@@ -158,6 +151,13 @@ func main() {
 					}
 				}
 			}
+		}
+
+		err = internal.DumpViews(cfg, database)
+		if err != nil {
+			log.Logger.Errorf("Error dumping views: %v\n", err)
+			os.Exit(1)
+			return err
 		}
 
 		internal.PrintRestoreConnectionSettings()
