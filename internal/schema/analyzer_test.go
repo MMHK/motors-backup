@@ -2,6 +2,7 @@ package schema
 
 import (
 	"database/sql"
+	"encoding/json"
 	"motors-backup/internal/config"
 	"motors-backup/internal/db"
 	"os"
@@ -73,4 +74,38 @@ func TestGetNonGeneratedColumns(t *testing.T) {
 	}
 	nonGeneratedColumns := GetNonGeneratedColumns(columns)
 	t.Logf("Non-generated columns: %+v", nonGeneratedColumns)
+}
+
+func TestAllTriggersDDL(t *testing.T) {
+	dbConn, dbName, _, err := GetTestConfig()
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+	triggers, err := AllTriggersDDL(dbConn, dbName)
+	if err != nil {
+		t.Errorf("Failed to get triggers: %v", err)
+	}
+	b, err := json.Marshal(triggers)
+	if err != nil {
+		t.Errorf("Failed to marshal triggers: %v", err)
+	}
+	t.Logf("Triggers: %s", string(b))
+}
+
+func TestAllViewDDL(t *testing.T) {
+	dbConn, _, _, err := GetTestConfig()
+
+	if err != nil {
+		t.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	views, err := AllViewDDL(dbConn)
+	if err != nil {
+		t.Errorf("Failed to get views: %v", err)
+	}
+	b, err := json.Marshal(views)
+	if err != nil {
+		t.Errorf("Failed to marshal views: %v", err)
+	}
+	t.Logf("Views: %s", string(b))
 }

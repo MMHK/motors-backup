@@ -55,6 +55,21 @@ func TestDumpTable(t *testing.T) {
 	}
 }
 
+func TestDumpViews(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	err := StartExport(cfg, func(database *sql.DB, info *MySQLInfo) error {
+		err := DumpViews(cfg, database)
+		if err != nil {
+			t.Errorf("DumpViews failed: %v", err)
+		}
+
+		return err
+	})
+	if err != nil {
+		t.Errorf("StartExport failed: %v", err)
+	}
+}
+
 func TestDumpTableStructure(t *testing.T) {
 	cfg := config.LoadTestConfig()
 

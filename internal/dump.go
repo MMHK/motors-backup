@@ -80,6 +80,24 @@ func DumpTable(cfg *config.Config, database *sql.DB, tableName string, whereClau
 	return nil
 }
 
+func DumpViews(cfg *config.Config, database *sql.DB) error {
+	viewDDLs, err := schema.AllViewDDL(database)
+	if err != nil {
+		return fmt.Errorf("failed to get view DDL: %w", err)
+	}
+	for _, viewDDL := range viewDDLs {
+		fmt.Printf("\n--\n-- Temporary table structure for view `%s`\n--\n\n", viewDDL.Name)
+		fmt.Printf("DROP TABLE IF EXISTS `%s`;\n", viewDDL.Name)
+		fmt.Printf("/*!50001 DROP VIEW IF EXISTS `%s`*/;\n", viewDDL.Name)
+		fmt.Println("SET @saved_cs_client     = @@character_set_client;")
+		fmt.Println("SET character_set_client = utf8mb4;")
+		fmt.Println(viewDDL.DDL)
+		fmt.Printf("SET character_set_client = @saved_cs_client;\n")
+	}
+
+	return nil
+}
+
 // MySQLInfo 存储MySQL服务器信息
 type MySQLInfo struct {
 	Version  string
