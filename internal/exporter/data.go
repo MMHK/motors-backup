@@ -33,6 +33,7 @@ func ExportData(db *sql.DB, tableName string, columns []string, whereClause stri
 
 	fmt.Printf("LOCK TABLES `%s` WRITE;\n", tableName)
 	fmt.Printf("/*!40000 ALTER TABLE `%s` DISABLE KEYS */;\n", tableName)
+	fmt.Println("START TRANSACTION;")
 
 	// 准备用于Scan的值
 	values := make([]interface{}, len(columns))
@@ -58,6 +59,7 @@ func ExportData(db *sql.DB, tableName string, columns []string, whereClause stri
 		return fmt.Errorf("error iterating rows: %w", err)
 	}
 
+	fmt.Println("COMMIT;")
 	fmt.Printf("/*!40000 ALTER TABLE `%s` ENABLE KEYS */;\n", tableName)
 	fmt.Println("UNLOCK TABLES;")
 	return nil
