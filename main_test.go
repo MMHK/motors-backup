@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -23,6 +24,7 @@ func TestFlagParsing(t *testing.T) {
 		expectedIgnoreTableData []string
 		expectedCreateDatabase  bool
 		expectedTableNames      []string
+		expectedWhereCondition  string
 	}{
 		{
 			name:                    "basic table export",
@@ -31,6 +33,7 @@ func TestFlagParsing(t *testing.T) {
 			expectedIgnoreTableData: []string{},
 			expectedCreateDatabase:  true,
 			expectedTableNames:      []string{"users"},
+			expectedWhereCondition:  "",
 		},
 		{
 			name:                    "multiple tables export",
@@ -39,6 +42,7 @@ func TestFlagParsing(t *testing.T) {
 			expectedIgnoreTableData: []string{},
 			expectedCreateDatabase:  true,
 			expectedTableNames:      []string{"users", "orders"},
+			expectedWhereCondition:  "",
 		},
 		{
 			name:                    "ignore table structure and data",
@@ -47,6 +51,7 @@ func TestFlagParsing(t *testing.T) {
 			expectedIgnoreTableData: []string{},
 			expectedCreateDatabase:  true,
 			expectedTableNames:      []string{"users", "logs"},
+			expectedWhereCondition:  "",
 		},
 		{
 			name:                    "ignore table data only",
@@ -55,6 +60,7 @@ func TestFlagParsing(t *testing.T) {
 			expectedIgnoreTableData: []string{"logs"},
 			expectedCreateDatabase:  true,
 			expectedTableNames:      []string{"users", "logs"},
+			expectedWhereCondition:  "",
 		},
 		{
 			name:                    "disable create database",
@@ -63,6 +69,7 @@ func TestFlagParsing(t *testing.T) {
 			expectedIgnoreTableData: []string{},
 			expectedCreateDatabase:  false,
 			expectedTableNames:      []string{"users"},
+			expectedWhereCondition:  "",
 		},
 		{
 			name:                    "multiple ignore flags",
@@ -71,6 +78,16 @@ func TestFlagParsing(t *testing.T) {
 			expectedIgnoreTableData: []string{"sessions"},
 			expectedCreateDatabase:  true,
 			expectedTableNames:      []string{"users", "logs", "temp", "sessions", "orders"},
+			expectedWhereCondition:  "",
+		},
+		{
+			name:                    "where condition",
+			args:                    []string{"motors-backup", "--where=id>100", "users"},
+			expectedIgnoreTables:    []string{},
+			expectedIgnoreTableData: []string{},
+			expectedCreateDatabase:  true,
+			expectedTableNames:      []string{"users"},
+			expectedWhereCondition:  "id>100",
 		},
 	}
 
@@ -83,7 +100,7 @@ func TestFlagParsing(t *testing.T) {
 			os.Args = tc.args
 
 			// 调用parseFlags函数
-			tableNames, createDatabase, ignoreTables, ignoreTableDataList, err := parseFlags()
+			tableNames, createDatabase, ignoreTables, ignoreTableDataList, whereCondition, err := parseFlags()
 			if err != nil {
 				t.Fatalf("parseFlags returned error: %v", err)
 			}
@@ -124,6 +141,11 @@ func TestFlagParsing(t *testing.T) {
 						t.Errorf("tableNames[%d] = %s, want %s", i, tableNames[i], expected)
 					}
 				}
+			}
+
+			// 验证where条件
+			if !strings.EqualFold(whereCondition, tc.expectedWhereCondition) {
+				t.Errorf("whereCondition = %s, want %s", whereCondition, tc.expectedWhereCondition)
 			}
 		})
 	}

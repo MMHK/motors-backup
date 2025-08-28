@@ -7,10 +7,14 @@ import (
 )
 
 // ExportData exports table data as INSERT statements
-func ExportData(db *sql.DB, tableName string, columns []string) error {
+func ExportData(db *sql.DB, tableName string, columns []string, whereClause string) error {
 	// 构建查询语句
 	columnList := "`" + strings.Join(columns, "`, `") + "`"
 	query := fmt.Sprintf("SELECT %s FROM `%s`", columnList, tableName)
+
+	if whereClause != "" {
+		query += " WHERE " + whereClause
+	}
 
 	rows, err := db.Query(query)
 	if err != nil {

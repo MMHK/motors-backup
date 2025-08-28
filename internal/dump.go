@@ -45,7 +45,7 @@ func DumpTableStructure(cfg *config.Config, database *sql.DB, tableName string) 
 }
 
 // DumpTable dumps the specified table data as SQL INSERT statements
-func DumpTable(cfg *config.Config, database *sql.DB, tableName string) error {
+func DumpTable(cfg *config.Config, database *sql.DB, tableName string, whereClause string) error {
 
 	// 获取MySQL服务器信息
 	mysqlInfo, err := getMySQLInfo(database)
@@ -71,7 +71,7 @@ func DumpTable(cfg *config.Config, database *sql.DB, tableName string) error {
 	}
 
 	// 导出数据
-	err = exporter.ExportData(database, tableName, nonGeneratedColumns)
+	err = exporter.ExportData(database, tableName, nonGeneratedColumns, whereClause)
 	if err != nil {
 		return fmt.Errorf("failed to export data: %w", err)
 	}

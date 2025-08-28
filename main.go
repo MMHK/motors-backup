@@ -13,7 +13,7 @@ import (
 )
 
 // parseFlags 处理命令行参数解析
-func parseFlags() (tableNames []string, createDatabase bool, ignoreTables ignoreList, ignoreTableDataList ignoreList, err error) {
+func parseFlags() (tableNames []string, createDatabase bool, ignoreTables ignoreList, ignoreTableDataList ignoreList, whereCondition string, err error) {
 	// 定义命令行参数
 	help := flag.Bool("help", false, "Show help information")
 	h := flag.Bool("h", false, "Show help information")
@@ -22,6 +22,9 @@ func parseFlags() (tableNames []string, createDatabase bool, ignoreTables ignore
 	// 定义可重复使用的ignore-table和ignore-table-data参数
 	flag.Var(&ignoreTables, "ignore-table", "Table name(s) to ignore structure and data, can be specified multiple times")
 	flag.Var(&ignoreTableDataList, "ignore-table-data", "Table name(s) to ignore data only, can be specified multiple times")
+
+	// 定义where条件参数
+	whereFlag := flag.String("where", "", "WHERE condition for querying table data")
 
 	flag.Usage = func() {
 		fmt.Println("Usage: motors-backup [options] table")
@@ -50,13 +53,15 @@ func parseFlags() (tableNames []string, createDatabase bool, ignoreTables ignore
 		fmt.Println("                                           but only structure for logs table")
 		fmt.Println("  motors-backup --create-database=false users")
 		fmt.Println("                                           Export users table without create database statement")
+		fmt.Println("  motors-backup --where='id>100' users")
+		fmt.Println("                                           Export users table with condition id>100")
 	}
 
 	flag.Parse()
 
 	// 处理帮助参数
 	if *help || *h {
-		return tableNames, createDatabase, ignoreTables, ignoreTableDataList, nil
+		return tableNames, createDatabase, ignoreTables, ignoreTableDataList, whereCondition, nil
 	}
 
 	// 检查参数
@@ -66,13 +71,14 @@ func parseFlags() (tableNames []string, createDatabase bool, ignoreTables ignore
 	}
 
 	createDatabase = *createDatabaseFlag
+	whereCondition = *whereFlag
 
-	return tableNames, createDatabase, ignoreTables, ignoreTableDataList, nil
+	return tableNames, createDatabase, ignoreTables, ignoreTableDataList, whereCondition, nil
 }
 
 func main() {
 	// 解析命令行参数
-	tableNames, createDatabase, ignoreTables, ignoreTableDataList, err := parseFlags()
+	tableNames, createDatabase, ignoreTables, ignoreTableDataList, whereCondition, err := parseFlags()
 	if err != nil {
 		flag.Usage()
 		os.Exit(1)
@@ -137,7 +143,7 @@ func main() {
 
 				// 如果不在忽略数据列表中，则导出表数据
 				if !ignoreTableDataList.Contains(tableName) {
-					err = internal.DumpTable(cfg, database, tableName)
+					err = internal.DumpTable(cfg, database, tableName, whereCondition)
 					if err != nil {
 						log.Logger.Errorf("Error dumping table %s: %v\n", tableName, err)
 						os.Exit(1)
