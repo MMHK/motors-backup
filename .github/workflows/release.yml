@@ -1,0 +1,46 @@
+# .github/workflows/release.yml
+
+name: GoReleaser
+
+# 工作流程的觸發條件
+on:
+  push:
+    # 只有當一個以 'v' 開頭的 tag 被推送到倉庫時，才觸發此流程
+    # 例如：v1.0.0, v1.2.3-beta
+    tags:
+      - 'v*'
+
+# 權限設置，允許工作流程創建 GitHub Release
+permissions:
+  contents: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    steps:
+      # 第一步：檢出你的代碼
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 獲取所有 git 歷史，以便 GoReleaser 可以生成完整的更新日誌
+          fetch-depth: 0
+
+      # 第二步：設置 Go 環境
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          # 指定你項目使用的 Go 版本
+          go-version: '1.21'
+
+      # 第三步：運行 GoReleaser
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          # 使用最新版本的 GoReleaser
+          version: latest
+          # 執行發佈命令
+          args: release --clean
+        env:
+          # GITHUB_TOKEN 是由 GitHub Actions 自動提供的密鑰，
+          # 用於授權 GoReleaser 在你的倉庫中創建 Release
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

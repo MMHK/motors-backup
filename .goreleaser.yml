@@ -1,0 +1,69 @@
+# .goreleaser.yml
+
+# 這是 GoReleaser 配置文件的版本
+version: 2
+
+# 在所有構建步驟之前運行的命令
+before:
+  hooks:
+    # 確保所有 Go 模塊依賴都已下載
+    - go mod tidy
+
+# 構建配置
+builds:
+  -
+    # 你的主程序入口文件，通常是 main.go
+    main: .
+    # 通過 ldflags 可以在編譯時嵌入版本號等信息
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    # 設置目標平臺
+    goos:
+      - linux
+      - windows
+    # 設置目標架構
+    goarch:
+      - amd64
+      - arm64
+    # 忽略不支持的 OS/Arch 組合，例如 windows/arm64 在此配置中不存在
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+# 打包配置
+archives:
+  -
+    # 生成的壓縮包文件名模板
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    # 替換常見的 OS 名稱
+    replacements:
+      linux: Linux
+      windows: Windows
+    # 壓縮包格式
+    format: tar.gz
+    # 為 Windows 平臺單獨創建 zip 壓縮包
+    format_overrides:
+      - goos: windows
+        format: zip
+    # 壓縮包中包含的文件
+    files:
+      - LICENSE
+      - README.md
+
+# 生成校驗和文件
+checksum:
+  name_template: 'checksums.txt'
+
+# 快照發佈配置（用於測試）
+snapshot:
+  name_template: "{{ incpatch .Version }}-next"
+
+# 更新日誌配置
+changelog:
+  sort: asc
+  filters:
+    # 排除以 'docs', 'test', 'chore' 開頭的提交信息
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
