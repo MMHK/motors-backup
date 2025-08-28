@@ -15,7 +15,7 @@ func TestDumpCreateDatabase(t *testing.T) {
 	}
 
 	err := StartExport(cfg, func(database *sql.DB, info *MySQLInfo) error {
-		err := DumpCreateDatabase(cfg, database)
+		err := DumpCreateDatabase(cfg, database, true)
 		if err != nil {
 			t.Errorf("DumpCreateDatabase failed: %v", err)
 		}
@@ -42,7 +42,7 @@ func TestDumpTable(t *testing.T) {
 	}
 
 	err := StartExport(cfg, func(database *sql.DB, info *MySQLInfo) error {
-		err := DumpTable(cfg, database, testTableName)
+		err := DumpTable(cfg, database, testTableName, "")
 		if err != nil {
 			t.Errorf("DumpTable failed: %v", err)
 		}
@@ -85,7 +85,7 @@ func TestDumpTableWithInvalidTable(t *testing.T) {
 	}
 
 	err := StartExport(cfg, func(database *sql.DB, info *MySQLInfo) error {
-		err := DumpTable(cfg, database, "non_existent_table")
+		err := DumpTable(cfg, database, "non_existent_table", "")
 		if err != nil {
 			t.Errorf("DumpTable failed: %v", err)
 		}
@@ -95,5 +95,20 @@ func TestDumpTableWithInvalidTable(t *testing.T) {
 
 	if err == nil {
 		t.Error("Expected error for non-existent table, got nil")
+	}
+}
+
+func TestPrintEnvironmentSettings(t *testing.T) {
+	cfg := config.LoadTestConfig()
+	err := StartExport(cfg, func(database *sql.DB, info *MySQLInfo) error {
+
+		PrintEnvironmentSettings(cfg, info)
+		PrintRestoreConnectionSettings()
+
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("StartExport failed: %v", err)
 	}
 }

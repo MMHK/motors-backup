@@ -7,6 +7,7 @@ import (
 	dbConn "motors-backup/internal/db"
 	"motors-backup/internal/exporter"
 	"motors-backup/internal/schema"
+	"runtime"
 	"strings"
 )
 
@@ -40,7 +41,7 @@ func DumpTableStructure(cfg *config.Config, database *sql.DB, tableName string) 
 	fmt.Println("/*!40101 SET @saved_cs_client     = @@character_set_client */;")
 	fmt.Println("/*!40101 SET character_set_client = utf8mb4 */;")
 	fmt.Printf("%s;\n", tableDDL)
-	fmt.Println("/*!40101 SET character_set_client = @saved_cs_client */;\n")
+	fmt.Printf("/*!40101 SET character_set_client = @saved_cs_client */;\n\n")
 	return nil
 }
 
@@ -135,6 +136,10 @@ func getMySQLInfo(database *sql.DB) (*MySQLInfo, error) {
 		return nil, fmt.Errorf("failed to get MySQL timezone: %w", err)
 	}
 
+	if !strings.Contains(timezone, "-") {
+		timezone = fmt.Sprintf("+%s", timezone)
+	}
+
 	return &MySQLInfo{
 		Version:  version,
 		Charset:  charset,
@@ -160,7 +165,11 @@ func checkMySQLVersionCompatibility(version string) error {
 
 // PrintEnvironmentSettings outputs basic MySQL environment settings
 func PrintEnvironmentSettings(cfg *config.Config, mysqlInfo *MySQLInfo) {
-	fmt.Println("-- MySQL dump 10.13  Distrib 8.0.x, for Linux (x86_64)")
+	// 獲取 golang runtime 執行環境arc
+	arch := runtime.GOARCH
+	os := runtime.GOOS
+
+	fmt.Printf("-- MOTORS_BACKUP 0.1  Distrib 8.0.x, for %s (%s)\n", os, arch)
 	fmt.Println("--")
 	fmt.Printf("-- Host: %s    Database: %s\n", cfg.DBHost, cfg.DBName)
 	fmt.Println("-- ------------------------------------------------------")
