@@ -13,8 +13,9 @@ COPY . .
 RUN go version \
  && export GO111MODULE=on \
  && export GOPROXY=https://goproxy.io,direct \
- && go mod vendor \
- && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o motors-backup
+ && go mod vendor
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o motors-backup
 
 
 ######## Start a new stage from scratch #######
