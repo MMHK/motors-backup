@@ -10,9 +10,10 @@ WORKDIR /app
 COPY . .
 
 # Build the Go app
-RUN go version \
+RUN apk add --no-cache git ca-certificates curl \
+ && go version \
  && export GO111MODULE=on \
- && export GOPROXY=https://goproxy.io,direct \
+ && export GOPROXY=direct \
  && go mod vendor
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o motors-backup
